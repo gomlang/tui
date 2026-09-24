@@ -13,4 +13,4 @@ can be added directly from independent calculations or the cited specification.
 
 Fixture SHA-256: `c0d878418b50659927b4fb0ee2434ec388356c9d04a817dab231483000e506ae`.
 
-The file uses `indexed-json-v2` to share repeated JSON subtrees. Nodes are in dependency order: `[0, value]` is a scalar; `[1, ids]` is an array; `[2, shape_id, ids]` is an object whose field names come from `shapes[shape_id]`. `root` selects the final decoded node. The native helper in `ecosystem/verification/reference` expands these references and compares objects independently of field order.
+The file uses `indexed-json-v2` to share repeated JSON subtrees. Nodes are in dependency order: `[0, value]` is a scalar; `[1, ids]` is an array; `[2, shape_id, ids]` is an object whose field names come from `shapes[shape_id]`. `root` selects the final decoded node. The native helper in `../../../../verification/reference` expands these references and compares objects independently of field order.

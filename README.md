@@ -91,5 +91,5 @@ The implementation uses the Unicode library's default width policy (narrow ambig
 Validation includes library snapshots and edge cases, independent consumer tests, 392 exhaustive wide-cell overwrite/fill cases, 1,650 small-layout cases, 2,500 seeded model mutations replayed across 2,505 emitted ANSI frames, and a real PTY test for input, paste, resize and terminal restoration:
 
 ```sh
-just ecosystem-test tui
+(cd ../verification && just ecosystem-test tui)
 ```

@@ -9,7 +9,7 @@ A GoML terminal UI library with Unicode cells, bounded layout, retained frame co
 "ecosystem::terminal" = "0.1.0"
 ```
 
-```gom
+```goml
 use ecosystem::tui;
 use ecosystem::ansi;
 
@@ -41,7 +41,7 @@ fn render(buffer: tui::Buffer) -> Result[(), tui::Error] {
 
 `Terminal::new(session)` checks interactive capabilities and selects the ANSI color profile. `draw` queries size, prepares a blank frame, calls the rendering callback, then writes the diff. `draw_with(context, callback)` also makes writes cancellable, including under output backpressure. `next_event(context, timeout_ms)` forwards keyboard, paste, mouse, focus, resize and EOF events; resize invalidates the frame. `close` restores the session. Use a `defer` to close the session even when constructing the TUI or rendering fails:
 
-```gom
+```goml
 use ecosystem::terminal;
 use ecosystem::tui;
 
@@ -96,7 +96,7 @@ Validation includes library snapshots and edge cases, example tests, 392 exhaust
 
 ## Development and examples
 
-Requires GoML 0.1.55 or newer. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
+Requires GoML 0.1.56 or newer. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
 
 ```sh
 goml run --example basic

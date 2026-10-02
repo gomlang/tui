@@ -1,0 +1,25 @@
+package tests;
+
+use ecosystem::tui;
+use ecosystem::terminal;
+use std::testing;
+
+#[test]
+fn imported_editor_crosses_short_lines_at_the_original_column() -> () {
+    let editor = testing::expect_ok(tui::Editor::new("abcdef\nx\nabcdef", 100), "editor");
+    testing::expect_ok(editor.set_cursor(5, false), "column");
+    for _ in 0..2 {
+        testing::expect_ok(
+            editor.update(
+                terminal::Event::Key(
+                    terminal::KeyEvent {
+                        code: terminal::KeyCode::Down,
+                        modifiers: terminal::Modifiers::none(),
+                    },
+                ),
+            ),
+            "down",
+        );
+    }
+    testing::assert_eq(editor.cursor(), "abcdef\nx\nabcde".byte_len());
+}

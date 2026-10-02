@@ -146,3 +146,27 @@ fn undo_redo_share_one_history_byte_budget() -> () {
     }
     testing::assert_eq(redos, 4);
 }
+
+#[test]
+fn vertical_navigation_restores_the_preferred_display_column() -> () {
+    let value = editor("abcdef\nx\n中\n\tZ\nabcdef");
+    testing::expect_ok(value.set_cursor(5, false), "column five");
+    for expected in["abcdef\nx", "abcdef\nx\n中", "abcdef\nx\n中\n", "abcdef\nx\n中\n\tZ\nabcde"] {
+        testing::expect_ok(value.update(key(terminal::KeyCode::Down)), "down");
+        testing::assert_eq(value.cursor(), expected.byte_len());
+    }
+    testing::expect_ok(value.update(key(terminal::KeyCode::Up)), "up to tab");
+    testing::expect_ok(value.update(key(terminal::KeyCode::Up)), "up to wide short line");
+    testing::expect_ok(value.update(key(terminal::KeyCode::Up)), "up to short line");
+    testing::expect_ok(value.update(key(terminal::KeyCode::Up)), "up to first line");
+    testing::assert_eq(value.cursor(), 5);
+    testing::expect_ok(value.update(key(terminal::KeyCode::Down)), "short line");
+    testing::expect_ok(value.update(key(terminal::KeyCode::Left)), "reset preference");
+    testing::expect_ok(value.update(key(terminal::KeyCode::Up)), "new column");
+    testing::assert_eq(value.cursor(), 0);
+    testing::expect_ok(value.set_cursor(5, false), "restore column");
+    testing::expect_ok(value.update(key(terminal::KeyCode::Down)), "short line");
+    testing::expect_ok(value.insert("y"), "edit resets preference");
+    testing::expect_ok(value.update(key(terminal::KeyCode::Up)), "edited column");
+    testing::assert_eq(value.cursor(), 2);
+}

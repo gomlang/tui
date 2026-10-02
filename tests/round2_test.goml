@@ -1,0 +1,32 @@
+package tests;
+
+use ecosystem::ansi;
+use ecosystem::tui;
+use std::testing;
+
+#[test]
+fn horizontally_clipped_tabs_keep_selection_and_cursor_styles() -> () {
+    let editor = testing::expect_ok(tui::Editor::new("\tX", 20), "editor");
+    let buffer = testing::expect_ok(tui::Buffer::new(4, 1), "buffer");
+    let options = tui::EditorOptions {
+        selection_style: ansi::Style::new().background(ansi::Color::Indexed(1)),
+        ..tui::EditorOptions::defaults(),
+    };
+    testing::assert_ok(editor.set_cursor(0, false));
+    testing::assert_ok(editor.set_cursor(1, true));
+    testing::assert_ok(editor.render(buffer, buffer.area(), options));
+    for x in 0..3 {
+        let cell = testing::expect_some(buffer.get(x, 0), "selected tab cell");
+        testing::assert_eq(cell.text, " ");
+        testing::assert_eq(cell.style, options.selection_style);
+    }
+    testing::assert_ok(editor.set_cursor(0, false));
+    testing::assert_ok(editor.render(buffer, buffer.area(), options));
+    for x in 0..4 {
+        testing::assert_eq(
+            testing::expect_some(buffer.get(x, 0), "cursor tab cell").style,
+            options.cursor_style,
+        );
+    }
+    testing::assert_ok(buffer.validate());
+}

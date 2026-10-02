@@ -88,8 +88,20 @@ Coordinates and each dimension are at most 4,096; buffers have at most 1,048,576
 
 The implementation uses the Unicode library's default width policy (narrow ambiguous characters, wide emoji). Terminal/font-specific alternative width policies, bidirectional shaping, persistent editor storage, soft-wrapped editing, system clipboard, widget click routing and GPU/image protocols are outside the current API.
 
-Validation includes library snapshots and edge cases, independent consumer tests, 392 exhaustive wide-cell overwrite/fill cases, 1,650 small-layout cases, 2,500 seeded model mutations replayed across 2,505 emitted ANSI frames, and a real PTY test for input, paste, resize and terminal restoration:
+Validation includes library snapshots and edge cases, example tests, 392 exhaustive wide-cell overwrite/fill cases, 1,650 small-layout cases, 2,500 seeded model mutations replayed across 2,505 emitted ANSI frames, and a real PTY test for input, paste, resize and terminal restoration:
 
 ```sh
 (cd ../verification && just ecosystem-test tui)
 ```
+
+## Development and examples
+
+Requires GoML 0.1.55 or newer. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
+
+```sh
+goml run --example basic
+goml test
+goml verify --timeout 300s
+```
+
+`goml test` builds the example and runs its tests. `goml verify` repeats the example checks as an independent module against an isolated registry snapshot. `(cd ../verification && just ecosystem-test tui)` also retains the library-specific smoke and compatibility checks.

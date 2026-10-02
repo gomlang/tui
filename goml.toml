@@ -5,3 +5,6 @@ path = "ecosystem::tui"
 "ecosystem::ansi" = "0.1.0"
 "ecosystem::unicode_text" = "0.1.0"
 "ecosystem::terminal" = "0.1.0"
+
+[dev-dependencies]
+"ecosystem::verification" = "0.1.0"

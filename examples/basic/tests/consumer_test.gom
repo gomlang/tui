@@ -1,6 +1,6 @@
 package tests;
 
-use consumer::tui as app;
+use ecosystem::tui::examples::basic as app;
 
 #[test]
 fn public_composition_and_rendering() -> () {

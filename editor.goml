@@ -419,7 +419,13 @@ impl Editor {
             } else {
                 options.style
             };
-            if y >= scroll_y && y < scroll_y + area.height && x >= scroll_x
+            if y >= scroll_y && y < scroll_y + area.height && part.text == "\t" && !options.password {
+                let left = maximum(x, scroll_x);
+                let right = minimum(x + width, scroll_x + area.width);
+                for column in left..right {
+                    buffer.put(area.x + column - scroll_x, area.y + y - scroll_y, " ", style)?;
+                }
+            } else if y >= scroll_y && y < scroll_y + area.height && x >= scroll_x
                 && x + width <= scroll_x + area.width {
                 let text = if options.password {
                     "•"

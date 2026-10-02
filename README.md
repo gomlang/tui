@@ -94,6 +94,8 @@ Validation includes library snapshots and edge cases, example tests, 392 exhaust
 (cd ../verification && just ecosystem-test tui)
 ```
 
+Horizontally clipped editor tabs paint every visible expanded space with the tab’s selection or cursor style. Wide graphemes still draw only when their complete cell pair fits; password rendering continues to use one mask cell per grapheme.
+
 ## Development and examples
 
 Requires GoML 0.1.56 or newer. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:

@@ -17,6 +17,7 @@ pub struct Editor {
     max_bytes: isize,
     scroll_x: Ref[isize],
     scroll_y: Ref[isize],
+    preferred_column: Ref[Option[isize]],
 }
 
 pub struct EditorOptions {
@@ -60,6 +61,7 @@ impl Editor {
                 max_bytes,
                 scroll_x: Ref::new(0),
                 scroll_y: Ref::new(0),
+                preferred_column: Ref::new(Option::None),
             },
         )
     }
@@ -115,6 +117,7 @@ impl Editor {
         if text != self.text() {
             self.remember();
             self.value.set(EditSnapshot { cursor: text.byte_len(), anchor: text.byte_len(), text });
+            self.preferred_column.set(Option::None);
         }
         Result::Ok(())
     }
@@ -125,6 +128,7 @@ impl Editor {
             || !unicode_text::is_grapheme_boundary(value.text, byte_offset) {
             return Result::Err(failure("editor cursor splits a grapheme"))
         }
+        self.preferred_column.set(Option::None);
         self.value.set(
             EditSnapshot {
                 cursor: byte_offset,
@@ -157,6 +161,7 @@ impl Editor {
             self.remember();
         }
         self.value.set(EditSnapshot { text: value, cursor, anchor: cursor });
+        self.preferred_column.set(Option::None);
         Result::Ok(())
     }
 
@@ -199,6 +204,7 @@ impl Editor {
         if let Some(value) = history.pop() {
             self.future.push(self.value.get());
             self.value.set(value);
+            self.preferred_column.set(Option::None);
             self.trim_history();
             true
         } else {
@@ -210,6 +216,7 @@ impl Editor {
         if let Some(value) = self.future.pop() {
             self.history.get().push(self.value.get());
             self.value.set(value);
+            self.preferred_column.set(Option::None);
             self.trim_history();
             true
         } else {
@@ -228,6 +235,7 @@ impl Editor {
                 if key.modifiers.control {
                     match key.code {
                         Char('a') => {
+                            self.preferred_column.set(Option::None);
                             self.value.set(
                                 EditSnapshot { cursor: value.text.byte_len(), anchor: 0, ..value },
                             );
@@ -314,6 +322,7 @@ impl Editor {
                         ) {
                             column += editor_width(part.text, column, false);
                         }
+                        let column = self.preferred_column.get().unwrap_or(column);
                         let next = if key.code == terminal::KeyCode::Up {
                             if start == 0 {
                                 0
@@ -330,6 +339,7 @@ impl Editor {
                             }
                         };
                         self.set_cursor(next, key.modifiers.shift)?;
+                        self.preferred_column.set(Option::Some(column));
                     },
                     _ => return Result::Ok(false),
                 }

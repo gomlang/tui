@@ -105,3 +105,7 @@ goml verify --timeout 300s
 ```
 
 `goml test` builds the example and runs its tests. `goml verify` repeats the example checks as an independent module against an isolated registry snapshot. `(cd ../verification && just ecosystem-test tui)` also retains the library-specific smoke and compatibility checks.
+
+Vertical editor movement remembers the intended display column across consecutive
+Up/Down keys, including short lines, tabs and wide graphemes. Horizontal movement,
+explicit cursor positioning, edits and undo/redo reset that column preference.

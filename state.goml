@@ -130,13 +130,19 @@ pub fn tabs(buffer: Buffer, area: Rect, labels: Vec[string], state: SelectionSta
         if bytes > MAX_TEXT_BYTES {
             return Result::Err(failure("tab text limit exceeded"))
         }
-        let display = ansi::safe_text(label.replace("\n", " ").replace("\t", " "));
+        let display = " " + ansi::safe_text(label.replace("\n", " ").replace("\t", " ")) + " ";
+        let mut width = 0;
+        // Include padding before segmentation: leading marks can join its space.
+        // Standalone zero-width clusters occupy a dotted-circle cell in Buffer.
+        for part in unicode_text::graphemes(display) {
+            width += maximum(1, unicode_text::width(part.text));
+        }
         widths.push(
-            unicode_text::width(display)
+            width
                 + if index + 1 < labels.len() {
-                    3
+                    1
                 } else {
-                    2
+                    0
                 },
         );
         display_labels.push(display);
@@ -159,7 +165,7 @@ pub fn tabs(buffer: Buffer, area: Rect, labels: Vec[string], state: SelectionSta
         }
         text.push(
             ansi::Span::new(
-                " " + display_labels[index] + " ",
+                display_labels[index],
                 if state.focused && index == selected {
                     theme.selected
                 } else {

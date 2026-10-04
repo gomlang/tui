@@ -230,7 +230,7 @@ fn selected_tabs_scroll_into_view() -> () {
 
 #[test]
 fn selected_tabs_follow_the_width_of_sanitized_labels() -> () {
-    for label in["\u001b".repeat(8), "a\nb\nc", "\t".repeat(8)] {
+    for label in["\u001b".repeat(8), "a\nb\nc", "\t".repeat(8), "\u200b".repeat(8)] {
         let output = buffer(8, 1);
         let state = testing::expect_ok(
             tui::tabs(
@@ -253,6 +253,7 @@ fn tabs_do_not_scroll_when_labels_exactly_fill_the_viewport() -> () {
     for (labels, columns, expected) in[
         (Vec::from_array(["A", "B"]), 7, " A │ B "),
         (Vec::from_array(["界", "B"]), 8, " 界 │ B "),
+        (Vec::from_array(["\u0301", "B"]), 6, " \u0301 │ B "),
         (Vec::from_array(["", ""]), 5, "  │  "),
         (Vec::from_array(["A", "B", "C"]), 11, " A │ B │ C "),
     ] {

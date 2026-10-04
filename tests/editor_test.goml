@@ -258,3 +258,74 @@ fn vertical_navigation_restores_the_preferred_display_column() -> () {
     testing::expect_ok(value.update(key(terminal::KeyCode::Up)), "edited column");
     testing::assert_eq(value.cursor(), 2);
 }
+
+#[test]
+fn editor_word_navigation_does_not_stop_inside_prepend_graphemes() -> () {
+    for text in["\u0600A", "\u0600ABC", "\u0600e\u0301bc", "\u0600!", "\u0600界", "\u0600👩‍💻"] {
+        for shifted in[false, true] {
+            let value = editor(text);
+            testing::assert_ok(value.set_cursor(0, false));
+            testing::assert_ok(
+                value.update(
+                    terminal::Event::Key(
+                        terminal::KeyEvent {
+                            code: terminal::KeyCode::Right,
+                            modifiers: terminal::Modifiers {
+                                control: true,
+                                shift: shifted,
+                                ..terminal::Modifiers::none(),
+                            },
+                        },
+                    ),
+                ),
+            );
+            testing::assert_eq(value.cursor(), text.byte_len());
+            testing::assert_eq(value.selection().is_some(), shifted);
+            testing::assert_ok(
+                value.update(
+                    terminal::Event::Key(
+                        terminal::KeyEvent {
+                            code: terminal::KeyCode::Left,
+                            modifiers: terminal::Modifiers {
+                                control: true,
+                                shift: shifted,
+                                ..terminal::Modifiers::none(),
+                            },
+                        },
+                    ),
+                ),
+            );
+            testing::assert_eq(value.cursor(), 0);
+            testing::assert(value.selection().is_none());
+            testing::assert_eq(value.text(), text);
+        }
+    }
+}
+
+#[test]
+fn editor_word_navigation_keeps_whole_words_around_prepend_clusters() -> () {
+    let value = editor("one \u0600two end");
+    testing::assert_ok(value.set_cursor(0, false));
+    for (code, positions) in[
+        (terminal::KeyCode::Right, [3, 4, 9, 10, 13]),
+        (terminal::KeyCode::Left, [10, 9, 4, 3, 0]),
+    ] {
+        for position in positions {
+            testing::assert_ok(
+                value.update(
+                    terminal::Event::Key(
+                        terminal::KeyEvent {
+                            code,
+                            modifiers: terminal::Modifiers {
+                                control: true,
+                                ..terminal::Modifiers::none(),
+                            },
+                        },
+                    ),
+                ),
+            );
+            testing::assert_eq(value.cursor(), position);
+            testing::assert(value.selection().is_none());
+        }
+    }
+}

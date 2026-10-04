@@ -539,21 +539,29 @@ fn byte_at_column(text: string, start: isize, end: isize, column: isize) -> isiz
 }
 
 fn word_cursor(text: string, offset: isize, forward: bool) -> isize {
-    if forward {
-        for word in unicode_text::word_segments(text) {
-            if word.end > offset {
-                return word.end
-            }
+    let graphemes = unicode_text::grapheme_boundaries(text);
+    let mut at = 0;
+    let mut previous = 0;
+    for boundary in unicode_text::word_boundaries(text) {
+        while at < graphemes.len() && graphemes[at] < boundary {
+            at += 1;
         }
+        if at >= graphemes.len() || graphemes[at] != boundary {
+            continue
+        }
+        if forward {
+            if boundary > offset {
+                return boundary
+            }
+        } else if boundary >= offset {
+            return previous
+        } else {
+            previous = boundary;
+        }
+    }
+    if forward {
         text.byte_len()
     } else {
-        let mut last = 0;
-        for word in unicode_text::word_segments(text) {
-            if word.start >= offset {
-                break
-            }
-            last = word.start;
-        }
-        last
+        previous
     }
 }

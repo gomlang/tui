@@ -33,6 +33,98 @@ fn paragraph_block_alignment_clipping_and_scroll_snapshot() -> () {
     testing::expect_ok(output.validate(), "snapshot invariant");
 }
 
+fn paragraph_mark_layout(mark: string) -> () {
+    let mark_style = ansi::Style::new().foreground(ansi::Color::Indexed(2));
+    let letter_style = ansi::Style::new().with_attribute(ansi::BOLD, true);
+    let text = ansi::StyledText::from_spans(
+        Vec::from_array([ansi::Span::new(mark, mark_style), ansi::Span::new("A", letter_style)]),
+    );
+    let wrapped = buffer(1, 2);
+    testing::assert_ok(
+        tui::paragraph(wrapped, wrapped.area(), text, tui::ParagraphOptions::defaults()),
+    );
+    testing::assert_eq(wrapped.lines().join("\n"), "◌" + mark + "\nA");
+    testing::assert_eq(cell(wrapped, 0, 0).style, mark_style);
+    testing::assert_eq(cell(wrapped, 0, 1).style, letter_style);
+    let aligned = buffer(3, 1);
+    testing::assert_ok(
+        tui::paragraph(
+            aligned,
+            aligned.area(),
+            text,
+            tui::ParagraphOptions {
+                wrap: false,
+                alignment: tui::Alignment::Right,
+                ..tui::ParagraphOptions::defaults(),
+            },
+        ),
+    );
+    testing::assert_eq(aligned.lines()[0], " ◌" + mark + "A");
+    let scrolled = buffer(1, 1);
+    testing::assert_ok(
+        tui::paragraph(
+            scrolled,
+            scrolled.area(),
+            text,
+            tui::ParagraphOptions { wrap: false, scroll_x: 1, ..tui::ParagraphOptions::defaults() },
+        ),
+    );
+    testing::assert_eq(scrolled.lines()[0], "A");
+    testing::assert_ok(wrapped.validate());
+    testing::assert_ok(aligned.validate());
+    testing::assert_ok(scrolled.validate());
+}
+
+#[test]
+fn paragraphs_account_for_standalone_mark_cells_before_layout() -> () {
+    for mark in["\u0301", "\u200b", "\u0301".repeat(2048)] {
+        paragraph_mark_layout(mark);
+    }
+}
+
+#[test]
+fn paragraph_cell_layout_preserves_tabs_wide_clipping_and_line_breaks() -> () {
+    let wrapped = buffer(4, 4);
+    testing::assert_ok(
+        tui::paragraph(
+            wrapped,
+            wrapped.area(),
+            ansi::StyledText::plain("ab\t界C\nz"),
+            tui::ParagraphOptions::defaults(),
+        ),
+    );
+    testing::assert_eq(wrapped.lines().join("\n"), "ab  \n    \n界C \nz   ");
+    let narrow = buffer(1, 4);
+    testing::assert_ok(
+        tui::paragraph(
+            narrow,
+            narrow.area(),
+            ansi::StyledText::plain("界\nA\n"),
+            tui::ParagraphOptions::defaults(),
+        ),
+    );
+    testing::assert_eq(narrow.lines().join("\n"), "�\nA\n \n ");
+    let clipped = buffer(5, 2);
+    testing::assert_ok(clipped.draw_text(clipped.area(), ansi::StyledText::plain(".....\n.....")));
+    let wide_style = ansi::Style::new().foreground(ansi::Color::Indexed(2));
+    let text = ansi::StyledText::from_spans(
+        Vec::from_array([ansi::Span::new("界", wide_style), ansi::Span::plain("AB")]),
+    );
+    testing::assert_ok(
+        tui::paragraph(
+            clipped,
+            rect(1, 1, 2, 1),
+            text,
+            tui::ParagraphOptions { wrap: false, scroll_x: 1, ..tui::ParagraphOptions::defaults() },
+        ),
+    );
+    testing::assert_eq(clipped.lines().join("\n"), ".....\n. A..");
+    testing::assert_eq(cell(clipped, 1, 1).style, wide_style);
+    testing::assert_ok(wrapped.validate());
+    testing::assert_ok(narrow.validate());
+    testing::assert_ok(clipped.validate());
+}
+
 #[test]
 fn list_and_table_keep_selection_visible_and_respect_focus() -> () {
     let output = buffer(12, 3);

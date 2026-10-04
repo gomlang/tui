@@ -1,6 +1,7 @@
 package tui;
 
 use ecosystem::ansi;
+use ecosystem::unicode_text;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Theme {
@@ -60,42 +61,76 @@ pub fn paragraph(buffer: Buffer, area: Rect, text: ansi::StyledText, options: Pa
     if area.width == 0 || area.height == 0 {
         return Result::Ok(())
     }
-    let lines = if options.wrap {
-        text.wrap(area.width).map_err(|error| failure(error.to_string()))?
-    } else {
-        let result = Vec::new();
-        let mut line = ansi::StyledText::new();
-        for span in text.spans() {
-            let parts = span.text.split("\n");
-            for index in 0..parts.len() {
-                if index > 0 {
-                    result.push(line);
-                    line = ansi::StyledText::new();
-                }
-                line.push(ansi::Span { text: parts[index], ..span });
-            }
+    let lines: Vec[Vec[ansi::StyledGrapheme]] = Vec::new();
+    let mut line = Vec::new();
+    let mut column = 0;
+    for part in text.graphemes(unicode_text::WidthOptions::new()) {
+        if part.text == "\n" {
+            lines.push(line);
+            line = Vec::new();
+            column = 0;
+            continue
         }
-        result.push(line);
-        result
-    };
+        let count = if part.text == "\t" {
+            8 - column % 8
+        } else {
+            1
+        };
+        let glyph = if part.text == "\t" {
+            ansi::StyledGrapheme { text: " ", width: 1, ..part }
+        } else if options.wrap && part.width > area.width {
+            ansi::StyledGrapheme { text: "�", width: 1, ..part }
+        } else {
+            ansi::StyledGrapheme { width: maximum(1, part.width), ..part }
+        };
+        for _ in 0..count {
+            if options.wrap && column + glyph.width > area.width {
+                lines.push(line);
+                line = Vec::new();
+                column = 0;
+            }
+            line.push(glyph);
+            column += glyph.width;
+        }
+    }
+    lines.push(line);
     for row in 0..area.height {
         let index = row + options.scroll_y;
         if index >= lines.len() {
             break
         }
-        let line = lines[index].clip(options.scroll_x, area.width).map_err(
-            |error| failure(error.to_string()),
-        )?;
-        let padding = maximum(0, area.width - line.width());
+        let line = lines[index];
+        let mut width = 0;
+        for part in line {
+            width += part.width;
+        }
+        let visible = clamp(width - options.scroll_x, 0, area.width);
+        let padding = area.width - visible;
         let offset = match options.alignment {
             Left => 0,
             Center => padding / 2,
             Right => padding,
         };
-        buffer.draw_text(
-            Rect { x: area.x + offset, y: area.y + row, width: area.width - offset, height: 1 },
-            line,
-        )?;
+        let mut column = 0;
+        let end = options.scroll_x + area.width;
+        for part in line {
+            if column >= end {
+                break
+            }
+            let left = maximum(column, options.scroll_x);
+            let right = minimum(column + part.width, end);
+            if left < right {
+                let x = area.x + offset + left - options.scroll_x;
+                if left == column && right == column + part.width {
+                    buffer.put(x, area.y + row, part.text, part.style)?;
+                } else {
+                    for dx in 0..right - left {
+                        buffer.put(x + dx, area.y + row, " ", part.style)?;
+                    }
+                }
+            }
+            column += part.width;
+        }
     }
     Result::Ok(())
 }

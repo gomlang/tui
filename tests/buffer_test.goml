@@ -4,6 +4,7 @@ use ecosystem::tui;
 use ecosystem::ansi;
 use ecosystem::unicode_text;
 use std::testing;
+use std::panic;
 
 fn buffer(width: isize, height: isize) -> tui::Buffer {
     testing::expect_ok(tui::Buffer::new(width, height), "buffer")
@@ -160,6 +161,40 @@ fn render_snapshot_isolation_invalidation_and_reentry_are_explicit() -> () {
     );
     testing::assert(
         testing::expect_ok(renderer.render(value, |_| Result::Ok(())), "invalidate during writer").full_redraw,
+    );
+}
+
+#[test]
+fn caught_writer_panic_requires_a_full_repaint_of_the_previous_frame() -> () {
+    let value = buffer(2, 1);
+    let renderer = testing::expect_ok(tui::Renderer::new(2, 1, ansi::Profile::Plain), "renderer");
+    let backend = tui::MemoryBackend::new();
+    testing::assert_ok(renderer.render(value, |text| backend.write(text)));
+    let changed = value.snapshot();
+    testing::assert_ok(changed.put(0, 0, "x", ansi::Style::new()));
+    let result = panic::catch(
+        || {
+            renderer.render(
+                changed,
+                |text| {
+                    testing::assert_ok(backend.write(text));
+                    panic::raise("writer panicked after changing the terminal")
+                },
+            )
+        },
+    );
+    testing::assert_err(result);
+    testing::assert_eq(backend.output().len(), 2);
+    let repaint = testing::expect_ok(renderer.render(value, |text| backend.write(text)), "repaint");
+    testing::assert(repaint.full_redraw);
+    testing::assert_eq(repaint.changed_cells, 2);
+    testing::assert_eq(backend.output().len(), 3);
+    testing::assert_eq(
+        testing::expect_ok(
+            renderer.render(value, |text| backend.write(text)),
+            "unchanged after repair",
+        ).bytes,
+        0,
     );
 }
 

@@ -108,6 +108,7 @@ impl Renderer {
         }
         let text = output.join("");
         if text != "" {
+            self.previous.set(Option::None);
             if let Err(error) = writer(text) {
                 self.invalidate();
                 return Result::Err(error)

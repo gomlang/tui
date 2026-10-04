@@ -161,6 +161,45 @@ fn editor_vertical_navigation_uses_tab_stops() -> () {
 }
 
 #[test]
+fn editor_scrolls_the_whole_wide_cursor_grapheme_into_view() -> () {
+    for glyph in["界", "👩‍💻"] {
+        let value = editor("abc" + glyph + "z");
+        let output = testing::expect_ok(tui::Buffer::new(4, 1), "wide cursor buffer");
+        let options = tui::EditorOptions::defaults();
+        testing::assert_ok(value.set_cursor(0, false));
+        testing::assert_ok(value.render(output, output.area(), options));
+        testing::assert_ok(value.set_cursor(3, false));
+        testing::assert_ok(value.render(output, output.area(), options));
+        testing::assert_eq(output.lines().join(""), "bc" + glyph);
+        testing::assert_eq(cell(output, 2, 0).style, options.cursor_style);
+        testing::assert_eq(cell(output, 3, 0).style, options.cursor_style);
+        testing::assert(cell(output, 3, 0).continuation);
+        testing::assert_ok(output.validate());
+    }
+}
+
+#[test]
+fn editor_clipped_wide_cells_keep_cursor_and_selection_styles() -> () {
+    let value = editor("界X");
+    let output = testing::expect_ok(tui::Buffer::new(4, 3), "clipped cursor buffer");
+    let options = tui::EditorOptions::defaults();
+    let area = tui::Rect { x: 1, y: 1, width: 1, height: 1 };
+    testing::assert_ok(value.set_cursor(0, false));
+    testing::assert_ok(value.render(output, area, options));
+    testing::assert_eq(cell(output, 1, 1).text, " ");
+    testing::assert_eq(cell(output, 1, 1).style, options.cursor_style);
+    testing::assert_ok(value.set_cursor(3, true));
+    testing::assert_ok(value.render(output, tui::Rect { width: 2, ..area }, options));
+    testing::assert_eq(cell(output, 1, 1).text, " ");
+    testing::assert_eq(cell(output, 1, 1).style, options.selection_style);
+    testing::assert_eq(cell(output, 2, 1).text, "X");
+    testing::assert_eq(cell(output, 2, 1).style, options.cursor_style);
+    testing::assert_eq(cell(output, 0, 1).style, options.style);
+    testing::assert_eq(cell(output, 3, 1).style, options.style);
+    testing::assert_ok(output.validate());
+}
+
+#[test]
 fn replacing_identical_selected_text_collapses_selection() -> () {
     let value = editor("abc");
     testing::expect_ok(value.set_cursor(0, false), "anchor");

@@ -370,8 +370,13 @@ impl Editor {
         let parts = unicode_text::graphemes(value.text);
         let mut cursor_x = 0;
         let mut cursor_y = 0;
+        let mut cursor_width = 1;
         for part in parts {
             if part.start >= value.cursor {
+                cursor_width = minimum(
+                    area.width,
+                    editor_width(part.text, cursor_x, options.password),
+                );
                 break
             }
             if part.text == "\n" && options.multiline {
@@ -386,8 +391,8 @@ impl Editor {
         if cursor_x < scroll_x {
             scroll_x = cursor_x;
         }
-        if cursor_x >= scroll_x + area.width {
-            scroll_x = cursor_x - area.width + 1;
+        if cursor_x + cursor_width > scroll_x + area.width {
+            scroll_x = cursor_x + cursor_width - area.width;
         }
         if cursor_y < scroll_y {
             scroll_y = cursor_y;
@@ -427,7 +432,9 @@ impl Editor {
             } else {
                 options.style
             };
-            if y >= scroll_y && y < scroll_y + area.height && part.text == "\t" && !options.password {
+            if y >= scroll_y && y < scroll_y + area.height
+                && (part.text == "\t" && !options.password || x < scroll_x
+                    || x + width > scroll_x + area.width) {
                 let left = maximum(x, scroll_x);
                 let right = minimum(x + width, scroll_x + area.width);
                 for column in left..right {

@@ -94,7 +94,7 @@ Validation includes library snapshots and edge cases, example tests, 392 exhaust
 (cd ../verification && just ecosystem-test tui)
 ```
 
-Horizontally clipped editor tabs paint every visible expanded space with the tab’s selection or cursor style. Wide graphemes still draw only when their complete cell pair fits; password rendering continues to use one mask cell per grapheme.
+Horizontally clipped editor tabs paint every visible expanded space with the tab’s selection or cursor style. Scrolling keeps the complete cursor grapheme visible when it fits in the viewport. Wide graphemes draw only when their complete cell pair fits; clipped intersections become spaces retaining their selection or cursor style, including a one-column viewport. Password rendering uses one mask cell per grapheme.
 
 Paragraph wrapping, alignment and horizontal scrolling account for the dotted-circle cells used to display standalone zero-width graphemes, preserving both the following text and each grapheme's style.
 

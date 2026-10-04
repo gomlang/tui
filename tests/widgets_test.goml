@@ -201,3 +201,23 @@ fn selected_tabs_scroll_into_view() -> () {
     testing::assert(output.lines()[0].contains("Four"));
     testing::assert_eq(cell(output, 1, 0).style, tui::Theme::defaults().selected);
 }
+
+#[test]
+fn selected_tabs_follow_the_width_of_sanitized_labels() -> () {
+    for label in["\u001b".repeat(8), "a\nb\nc", "\t".repeat(8)] {
+        let output = buffer(8, 1);
+        let state = testing::expect_ok(
+            tui::tabs(
+                output,
+                output.area(),
+                Vec::from_array([label, "B"]),
+                tui::SelectionState { selected: 1, ..tui::SelectionState::new() },
+                tui::Theme::defaults(),
+            ),
+            "scroll sanitized tabs",
+        );
+        testing::assert_eq(state.offset, 1);
+        testing::assert_eq(output.lines()[0], " B      ");
+        testing::assert_eq(cell(output, 1, 0).style, tui::Theme::defaults().selected);
+    }
+}

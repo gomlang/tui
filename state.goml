@@ -121,6 +121,7 @@ pub fn tabs(buffer: Buffer, area: Rect, labels: Vec[string], state: SelectionSta
         return Result::Err(failure("tab limit exceeded"))
     }
     let selected = clamp(state.selected, 0, maximum(0, labels.len() - 1));
+    let display_labels = Vec::new();
     let widths = Vec::new();
     let mut bytes = 0;
     for label in labels {
@@ -128,7 +129,9 @@ pub fn tabs(buffer: Buffer, area: Rect, labels: Vec[string], state: SelectionSta
         if bytes > MAX_TEXT_BYTES {
             return Result::Err(failure("tab text limit exceeded"))
         }
-        widths.push(unicode_text::width(label) + 3);
+        let display = ansi::safe_text(label.replace("\n", " ").replace("\t", " "));
+        widths.push(unicode_text::width(display) + 3);
+        display_labels.push(display);
     }
     let mut offset = clamp(state.offset, 0, selected);
     let mut visible_width = 0;
@@ -148,7 +151,7 @@ pub fn tabs(buffer: Buffer, area: Rect, labels: Vec[string], state: SelectionSta
         }
         text.push(
             ansi::Span::new(
-                " " + labels[index].replace("\n", " ").replace("\t", " ") + " ",
+                " " + display_labels[index] + " ",
                 if state.focused && index == selected {
                     theme.selected
                 } else {

@@ -368,3 +368,33 @@ fn tabs_do_not_scroll_when_labels_exactly_fill_the_viewport() -> () {
         testing::assert_eq(state.offset, 1);
     }
 }
+
+#[test]
+fn tabs_do_not_scroll_to_reveal_a_separator_after_the_selected_label() -> () {
+    for (first, columns, expected) in[
+        ("A", 7, " A │ B "),
+        ("界", 8, " 界 │ B "),
+        ("\u0301", 6, " \u0301 │ B "),
+        ("\u200b", 7, " ◌\u200b │ B "),
+    ] {
+        let labels = Vec::from_array([first, "B", "C"]);
+        let selection = tui::SelectionState { selected: 1, ..tui::SelectionState::new() };
+        let output = buffer(columns, 1);
+        let state = testing::expect_ok(
+            tui::tabs(output, output.area(), labels, selection, tui::Theme::defaults()),
+            "visible selected label",
+        );
+        testing::assert_eq(state.offset, 0);
+        testing::assert_eq(output.lines()[0], expected);
+        testing::assert_eq(cell(output, columns - 2, 0).style, tui::Theme::defaults().selected);
+        let narrow = buffer(columns - 1, 1);
+        let state = testing::expect_ok(
+            tui::tabs(narrow, narrow.area(), labels, selection, tui::Theme::defaults()),
+            "selected label no longer fits",
+        );
+        testing::assert_eq(state.offset, 1);
+        testing::assert(narrow.lines()[0].starts_with(" B │"));
+        testing::assert_ok(output.validate());
+        testing::assert_ok(narrow.validate());
+    }
+}

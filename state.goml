@@ -152,6 +152,9 @@ pub fn tabs(buffer: Buffer, area: Rect, labels: Vec[string], state: SelectionSta
     for index in offset..minimum(selected + 1, labels.len()) {
         visible_width += widths[index];
     }
+    if selected + 1 < labels.len() {
+        visible_width -= 1;
+    }
     while visible_width > area.width && offset < selected {
         visible_width -= widths[offset];
         offset += 1;

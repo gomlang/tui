@@ -76,6 +76,10 @@ The caller drives redraw timing and owns session lifetime. Buffers, editor state
 
 List/table/tree/tabs rendering returns updated state; retain that value for subsequent events. `TreeState::with_selection` updates its public selection while preserving the private expansion state. Widgets clear the areas they own where appropriate. Chart and sparkline can be overlaid; the caller can fill their area before rendering. Widget operations may have drawn part of their area before returning an input/budget error, so render into a new frame and propagate errors instead of committing a failed frame. Mouse click hit-testing and application actions belong to the application; selection state directly supports wheel navigation.
 
+Tabs scroll only as far as needed to show the selected label and its padding.
+The following separator can be clipped at the right edge without hiding an
+otherwise visible tab on the left.
+
 ## Editor
 
 `Editor::new(text, max_bytes)` creates shared editor state. `text`, `cursor` and `selection` expose text, a UTF-8 byte offset, and an ordered selected range. `set_cursor(offset, extend_selection)` rejects offsets inside a grapheme. `insert` replaces the selection; `set_text` replaces the entire document. Both are atomic on byte-limit errors. `update(terminal::Event)` handles printable keys, paste, grapheme Left/Right/Delete/Backspace, line/document Home/End, Up/Down, Ctrl+Left/Right word movement, Ctrl+A selection, Ctrl+Z/Ctrl+Shift+Z/Ctrl+Y history. Its boolean indicates whether it handled the event.

@@ -64,7 +64,7 @@ The caller drives redraw timing and owns session lifetime. Buffers, editor state
 | `Theme`, `block` | Base/border/title/selected/muted/accent styles, Unicode border and clipped title, inner content rectangle |
 | `paragraph` | Styled text, column wrapping, alignment, vertical and horizontal scroll |
 | `SelectionState`, `list` | Selection, focus, viewport following, arrow/Home/End/Page navigation and mouse wheel |
-| `table` | Styled header/cells, constrained column widths, selected rows and vertical scrolling |
+| `table` | Styled header/cells, constrained column widths, selected rows and vertical scrolling; zero-height areas draw nothing |
 | `TreeNode`, `TreeState`, `tree` | Validated flat preorder hierarchy, unique IDs, expansion, depth indentation, selection and scrolling; Enter/Space/Left/Right expansion |
 | `tabs` | Selected tab styling and horizontal scrolling to keep selection visible |
 | `scrollbar` | Horizontal/vertical proportional thumb with clamped offset |

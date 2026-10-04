@@ -198,8 +198,10 @@ pub fn table(
     };
     let state = state.visible(rows.len(), area.height - header_rows);
     buffer.fill(area, theme.base)?;
-    for column in 0..header.len() {
-        buffer.draw_text(Rect { height: 1, ..regions[column] }, header[column])?;
+    if header_rows > 0 {
+        for column in 0..header.len() {
+            buffer.draw_text(Rect { height: 1, ..regions[column] }, header[column])?;
+        }
     }
     for row in 0..area.height - header_rows {
         let index = state.offset + row;

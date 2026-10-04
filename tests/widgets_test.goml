@@ -79,6 +79,32 @@ fn list_and_table_keep_selection_visible_and_respect_focus() -> () {
 }
 
 #[test]
+fn zero_height_tables_do_not_draw_headers_outside_their_area() -> () {
+    let output = buffer(8, 2);
+    testing::assert_ok(
+        output.draw_text(output.area(), ansi::StyledText::plain("reserved\ncontent")),
+    );
+    let before = output.lines().join("\n");
+    for y in[0, 1, tui::MAX_DIMENSION] {
+        let state = testing::expect_ok(
+            tui::table(
+                output,
+                rect(0, y, 8, 0),
+                Vec::from_array([ansi::StyledText::plain("HEADER")]),
+                Vec::from_array([Vec::from_array([ansi::StyledText::plain("row")])]),
+                Vec::from_array([tui::Constraint::Fill(1)]),
+                tui::SelectionState { selected: 99, ..tui::SelectionState::new() },
+                tui::Theme::defaults(),
+            ),
+            "zero-height table",
+        );
+        testing::assert_eq(state.selected, 0);
+        testing::assert_eq(output.lines().join("\n"), before);
+        testing::assert_ok(output.validate());
+    }
+}
+
+#[test]
 fn tree_expansion_hierarchy_validation_and_focus_navigation() -> () {
     let output = buffer(16, 3);
     let nodes = Vec::from_array(

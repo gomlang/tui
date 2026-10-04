@@ -221,3 +221,31 @@ fn selected_tabs_follow_the_width_of_sanitized_labels() -> () {
         testing::assert_eq(cell(output, 1, 0).style, tui::Theme::defaults().selected);
     }
 }
+
+#[test]
+fn tabs_do_not_scroll_when_labels_exactly_fill_the_viewport() -> () {
+    for (labels, columns, expected) in[
+        (Vec::from_array(["A", "B"]), 7, " A │ B "),
+        (Vec::from_array(["界", "B"]), 8, " 界 │ B "),
+        (Vec::from_array(["", ""]), 5, "  │  "),
+        (Vec::from_array(["A", "B", "C"]), 11, " A │ B │ C "),
+    ] {
+        let output = buffer(columns, 1);
+        let selection = tui::SelectionState {
+            selected: labels.len() - 1,
+            ..tui::SelectionState::new(),
+        };
+        let state = testing::expect_ok(
+            tui::tabs(output, output.area(), labels, selection, tui::Theme::defaults()),
+            "exactly fitting tabs",
+        );
+        testing::assert_eq(state.offset, 0);
+        testing::assert_eq(output.lines()[0], expected);
+        let narrower = buffer(columns - 1, 1);
+        let state = testing::expect_ok(
+            tui::tabs(narrower, narrower.area(), labels, selection, tui::Theme::defaults()),
+            "tabs exceeding viewport",
+        );
+        testing::assert_eq(state.offset, 1);
+    }
+}

@@ -144,13 +144,16 @@ impl Editor {
     }
 
     pub fn insert(self: Editor, text: string) -> Result[(), Error] {
+        let old = self.value.get();
+        self.replace(text, minimum(old.anchor, old.cursor), maximum(old.anchor, old.cursor))
+    }
+
+    fn replace(self: Editor, text: string, start: isize, end: isize) -> Result[(), Error] {
         if text.byte_len() > self.max_bytes {
             return Result::Err(failure("editor insertion too large"))
         }
         let text = ansi::safe_text(text.replace("\r\n", "\n"));
         let old = self.value.get();
-        let start = minimum(old.anchor, old.cursor);
-        let end = maximum(old.anchor, old.cursor);
         if old.text.byte_len() - (end - start) + text.byte_len() > self.max_bytes {
             return Result::Err(failure("editor byte limit exceeded"))
         }
@@ -267,15 +270,20 @@ impl Editor {
                         self.insert("\t")?;
                     },
                     Backspace | Delete => {
-                        if self.selection().is_none() {
+                        if value.anchor == value.cursor {
                             let next = if key.code == terminal::KeyCode::Backspace {
                                 previous_boundary(value.text, value.cursor)
                             } else {
                                 next_boundary(value.text, value.cursor)
                             };
-                            self.set_cursor(next, true)?;
+                            self.replace(
+                                "",
+                                minimum(value.cursor, next),
+                                maximum(value.cursor, next),
+                            )?;
+                        } else {
+                            self.insert("")?;
                         }
-                        self.insert("")?;
                     },
                     Left | Right => {
                         let next = if key.modifiers.control {

@@ -2,9 +2,9 @@
 path = "ecosystem::tui"
 
 [dependencies]
-"ecosystem::ansi" = "0.1.0"
-"ecosystem::unicode_text" = "0.1.0"
-"ecosystem::terminal" = "0.1.0"
+"ecosystem::ansi" = true
+"ecosystem::unicode_text" = true
+"ecosystem::terminal" = true
 
 [dev-dependencies]
-"ecosystem::verification" = "0.1.0"
+"ecosystem::verification" = true

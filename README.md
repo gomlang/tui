@@ -4,9 +4,9 @@ A GoML terminal UI library with Unicode cells, bounded layout, retained frame co
 
 ```toml
 [dependencies]
-"ecosystem::tui" = "0.1.0"
-"ecosystem::ansi" = "0.1.0"
-"ecosystem::terminal" = "0.1.0"
+"ecosystem::tui" = true
+"ecosystem::ansi" = true
+"ecosystem::terminal" = true
 ```
 
 ```goml
@@ -104,15 +104,15 @@ Paragraph wrapping, alignment and horizontal scrolling account for the dotted-ci
 
 ## Development and examples
 
-Requires GoML 0.1.56 or newer. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
+Requires a current GoML toolchain supporting unversioned registry dependencies; see [the pinned ecosystem toolchain](https://github.com/gomlang/verification/blob/main/ci/toolchain.json). The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
 
 ```sh
 goml run --example basic
 goml test
-goml verify --timeout 300s
+(cd ../verification && just ecosystem-test tui)
 ```
 
-`goml test` builds the example and runs its tests. `goml verify` repeats the example checks as an independent module against an isolated registry snapshot. `(cd ../verification && just ecosystem-test tui)` also retains the library-specific smoke and compatibility checks.
+`goml test` builds the example and runs its tests. The ecosystem verifier uses an isolated registry snapshot and runs the library-specific smoke and compatibility checks.
 
 Vertical editor movement remembers the intended display column across consecutive
 Up/Down keys, including short lines, tabs and wide graphemes. Horizontal movement,

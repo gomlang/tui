@@ -95,7 +95,7 @@ The implementation uses the Unicode library's default width policy (narrow ambig
 Validation includes library snapshots and edge cases, example tests, 392 exhaustive wide-cell overwrite/fill cases, 1,650 small-layout cases, 2,500 seeded model mutations replayed across 2,505 emitted ANSI frames, and a real PTY test for input, paste, resize and terminal restoration:
 
 ```sh
-(cd ../verification && just ecosystem-test tui)
+(cd ../workflows && just ecosystem-test tui)
 ```
 
 Horizontally clipped editor tabs paint every visible expanded space with the tab’s selection or cursor style. Scrolling keeps the complete cursor grapheme visible when it fits in the viewport. Wide graphemes draw only when their complete cell pair fits; clipped intersections become spaces retaining their selection or cursor style, including a one-column viewport. Password rendering uses one mask cell per grapheme.
@@ -104,12 +104,12 @@ Paragraph wrapping, alignment and horizontal scrolling account for the dotted-ci
 
 ## Development and examples
 
-Requires a current GoML toolchain supporting unversioned registry dependencies; see [the pinned ecosystem toolchain](https://github.com/gomlang/verification/blob/main/ci/toolchain.json). The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
+Requires a current GoML toolchain supporting unversioned registry dependencies; see [the pinned ecosystem toolchain](https://github.com/gomlang/workflows/blob/main/ci/toolchain.json). The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
 
 ```sh
 goml run --example basic
 goml test
-(cd ../verification && just ecosystem-test tui)
+(cd ../workflows && just ecosystem-test tui)
 ```
 
 `goml test` builds the example and runs its tests. The ecosystem verifier uses an isolated registry snapshot and runs the library-specific smoke and compatibility checks.
